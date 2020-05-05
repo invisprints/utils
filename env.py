@@ -113,9 +113,12 @@ def show_env(show_nvidia_smi:bool=False):
     if sys.platform.startswith('darwin'):
         rep.append(["CPU Name", subprocess.check_output(["sysctl", "-n", "machdep.cpu.brand_string"]).decode('utf-8')])
     elif sys.platform.startswith('linux'):
-        rep.append(["CPU Name", subprocess.call(['lscpu'])])
+        all_info = subprocess.check_output("lscpu", shell=True).strip().decode('utf-8')
+        for line in all_info.split("\n"):
+            if "model name" in line:
+                rep.append(["CPU Name", re.sub( ".*Model name.*:", "", line,1)])
     elif sys.platform.startswith('win32'):
-        rep.append(["CPU Name", subprocess.call(['wmic', 'cpu', 'get', 'name'])])
+        rep.append(["CPU Name", subprocess.check_output(['wmic', 'cpu', 'get', 'name']).decode("utf-8")])
 
     # number of cores
     rep.append(["Physical cores:", psutil.cpu_count(logical=False)])
@@ -145,15 +148,7 @@ def show_env(show_nvidia_smi:bool=False):
     rep.append(["platform", platform.platform()])
     rep.append(["Node Name", platform.node()])
 
-    if platform.system() == 'Linux':
-        distro = import_module('distro')
-        if distro:
-            # full distro info
-            rep.append(["distro", ' '.join(distro.linux_distribution())])
-        else:
-            opt_mods.append('distro')
-            # partial distro info
-            rep.append(["distro", platform.uname().version])
+    rep.append(["Version", platform.uname().version])
 
     rep.append(["conda env", get_env('CONDA_DEFAULT_ENV')])
     rep.append(["python", sys.executable])
@@ -175,10 +170,6 @@ def show_env(show_nvidia_smi:bool=False):
 
     print("Please make sure to include opening/closing ``` when you paste into forums/github to make the reports appear formatted as code sections.\n")
 
-    if opt_mods:
-        print("Optional package(s) to enhance the diagnostics can be installed with:")
-        print(f"pip install {' '.join(opt_mods)}")
-        print("Once installed, re-run this utility to get the additional information")
 
 
 
