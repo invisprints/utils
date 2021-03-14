@@ -7,7 +7,10 @@ from importlib import import_module
 import sys
 import platform
 import torch
-import psutil
+try:
+    import psutil
+except ImportError:
+    print("Please install psutil")
 
 # __all__ = ['show_env']
 
